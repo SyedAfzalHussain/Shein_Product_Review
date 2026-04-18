@@ -18,4 +18,6 @@ urlpatterns = [
 
     # Logout (blacklists refresh token)
     path("logout/",   views.logout,   name="auth-logout"),
+    path('forgot-password/', views.forgot_password),
+    path('reset-password/<int:uid>/<str:token>/', views.reset_password),
 ]

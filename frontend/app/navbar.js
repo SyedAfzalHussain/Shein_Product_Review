@@ -19,6 +19,7 @@ export default function NavbarClient() {
 
       <div className="flex gap-4 items-center text-sm font-medium text-muted">
         <Link href="/" className="hover:text-ink transition-colors">Browse</Link>
+        <Link href="/about" className="hover:text-ink transition-colors">About</Link>
         <Link href="/dashboard" className="hover:text-ink transition-colors">Dashboard</Link>
 
         {/* Wishlist icon */}
@@ -30,6 +31,7 @@ export default function NavbarClient() {
             </span>
           )}
         </Link>
+        <Link href="/about" className="hover:text-ink transition-colors">About</Link>
 
         {!loading && (
           user ? (

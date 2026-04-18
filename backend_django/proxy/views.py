@@ -65,7 +65,6 @@ def dashboard_stats(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def analyze(request):
-    """POST /api/analyze/  →  FastAPI /analyze"""
     try:
         body = json.loads(request.body)
     except (json.JSONDecodeError, ValueError):

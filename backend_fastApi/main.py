@@ -13,6 +13,32 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import pandas as pd
 import os, random
 
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import torch
+import torch.nn.functional as F
+
+MODEL_PATH = "sentiment_model_v1"
+
+def predict_sentiment_ml(text: str):
+    inputs = hf_tokenizer(
+        text,
+        return_tensors="pt",
+        truncation=True,
+        padding=True,
+        max_length=128
+    )
+
+    with torch.no_grad():
+        outputs = hf_model(**inputs)
+        probs = F.softmax(outputs.logits, dim=1)
+        pred_class = torch.argmax(probs, dim=1).item()
+
+    return {
+        "label": label_map[pred_class],
+        "confidence": round(probs[0][pred_class].item(), 3),
+        "all_scores": probs[0].tolist()
+    }
+
 app = FastAPI(title="SheinReview API", version="2.0.0")
 
 app.add_middleware(
@@ -30,6 +56,20 @@ else:
     print("images/ folder not found, using fallback URLs")
 
 analyzer = SentimentIntensityAnalyzer()
+
+print("Loading ML sentiment model...")
+hf_tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
+hf_model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
+
+hf_model.eval()  # set to evaluation mode
+
+# Optional: label mapping (adjust if needed)
+label_map = {
+    0: "Very Negative",
+    1: "Negative",
+    2: "Neutral",
+    3: "Positive"
+}
 
 FALLBACK_IMAGES = {
     "Topwear":    "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&q=80",
@@ -221,9 +261,27 @@ def dashboard_stats():
     return {"total_reviews":total_reviews,"total_products":total_products,"avg_rating":avg_rating,"sentiment_distribution":{"Positive":positive,"Neutral":neutral,"Negative":negative},"top_products":top5,"bottom_products":bot5,"rating_distribution":rating_dist,"category_sentiment":cat_sentiment}
 
 
-@app.post("/analyze")
-def analyze(payload: dict):
-    text = payload.get("text","")
+# @app.post("/analyze")
+# def analyze(payload: dict):
+#     text = payload.get("text","")
+#     if not text.strip():
+#         raise HTTPException(status_code=400, detail="text is required")
+#     return analyze_text(text)
+
+@app.post("/analyze-ml")
+def analyze_ml(payload: dict):
+    # POST /analyze-ml
+    # {
+    # "text": "This dress is amazing and fits perfectly!"
+    # }
+    text = payload.get("text", "")
+    
     if not text.strip():
         raise HTTPException(status_code=400, detail="text is required")
-    return analyze_text(text)
+
+    result = predict_sentiment_ml(text)
+
+    return {
+        "text": text,
+        "prediction": result
+    }

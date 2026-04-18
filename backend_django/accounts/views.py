@@ -7,6 +7,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import RegisterSerializer, UserSerializer
 
+from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+from urllib.parse import quote
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
@@ -14,6 +21,35 @@ def get_tokens_for_user(user):
         "refresh": str(refresh),
         "access":  str(refresh.access_token),
     }
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def forgot_password(request):
+    email = request.data.get('email')
+    user = User.objects.filter(email=email).first()
+
+    if not user:
+        return Response({"error": "User not found"}, status=404)
+
+    token = default_token_generator.make_token(user)
+    uid = user.pk
+
+    token = default_token_generator.make_token(user)
+    uid = user.pk
+ 
+    safe_token = quote(token)  # 🔥 FIX
+
+    reset_link = f"http://localhost:3000/auth/reset-password/{uid}/{safe_token}"
+
+    send_mail(
+        'Password Reset',
+        f'Click here:\n{reset_link}',  # 👈 newline BEFORE link
+        'from@example.com',
+        [email],
+    )
+
+    return Response({"message": "Reset link sent"})
+
 
 
 @api_view(["POST"])
@@ -53,3 +89,22 @@ def logout(request):
         return Response({"message": "Logged out successfully."}, status=status.HTTP_205_RESET_CONTENT)
     except Exception:
         return Response({"error": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password(request, uid, token):
+    from django.contrib.auth.models import User
+
+    try:
+        user = User.objects.get(pk=uid)
+    except User.DoesNotExist:
+        return Response({"error": "Invalid user"}, status=400)
+
+    if not default_token_generator.check_token(user, token):
+        return Response({"error": "Invalid token"}, status=400)
+
+    new_password = request.data.get('password')
+    user.set_password(new_password)
+    user.save()
+
+    return Response({"message": "Password reset successful"})

@@ -12,7 +12,7 @@ FASTAPI_BASE = "http://localhost:4000"
 
 
 def _get_sentiment(text: str) -> dict:
-    """Call FastAPI /analyze to get VADER sentiment."""
+    """Call FastAPI /analyze-ml to get VADER sentiment."""
     try:
         r = requests.post(f"{FASTAPI_BASE}/analyze", json={"text": text}, timeout=5)
         return r.json()

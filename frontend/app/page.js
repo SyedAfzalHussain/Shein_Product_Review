@@ -177,14 +177,36 @@ export default function HomePage() {
         </button>
         {analyzeResult && (
           <div className="mt-5 flex flex-wrap gap-4 items-center">
-            <SentimentBadge label={analyzeResult.label} score={analyzeResult.compound} />
+            
+            <SentimentBadge label={analyzeResult?.label} score={analyzeResult?.compound} />
             <div className="flex gap-4 text-xs font-mono text-muted">
-              <span className="text-sage">+{(analyzeResult.positive * 100).toFixed(0)}% pos</span>
-              <span className="text-rose">−{(analyzeResult.negative * 100).toFixed(0)}% neg</span>
-              <span>={(analyzeResult.neutral * 100).toFixed(0)}% neu</span>
+              <span className="text-sage">+{(analyzeResult?.positive * 100).toFixed(0)}% pos</span>
+              <span className="text-rose">−{(analyzeResult?.negative * 100).toFixed(0)}% neg</span>
+              <span>={(analyzeResult?.neutral * 100).toFixed(0)}% neu</span>
             </div>
           </div>
         )}
+        {/* {analyzeResult && (
+  <div className="mt-5 flex flex-wrap gap-4 items-center">
+    
+    <SentimentBadge 
+      label={analyzeResult?.prediction?.label} 
+      score={analyzeResult?.prediction?.confidence} 
+    />
+
+    <div className="flex gap-4 text-xs font-mono text-muted">
+      <span className="text-sage">
+        +{(analyzeResult?.prediction?.all_scores?.[3] * 100).toFixed(0)}% pos
+      </span>
+      <span className="text-rose">
+        −{(analyzeResult?.prediction?.all_scores?.[0] * 100).toFixed(0)}% neg
+      </span>
+      <span>
+        ={(analyzeResult?.prediction?.all_scores?.[2] * 100).toFixed(0)}% neu
+      </span>
+    </div>
+  </div>
+)} */}
       </section>
     </div> 
   );
